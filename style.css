@@ -5,6 +5,10 @@
   font-family: sans-serif;
 }
 
+.h1{
+  text-align: center;
+}
+
 body{
   background: #644bff;
   padding: 0 20px;
