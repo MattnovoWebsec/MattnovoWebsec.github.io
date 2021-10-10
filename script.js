@@ -17,15 +17,13 @@ import $ from "https://cdn.skypack.dev/jquery@3.6.0";
   measurementId: "G-J9RLL10P3N"
 };
 
-  
-
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   let db = rtdb.getDatabase(app);
   let songRef = rtdb.ref(db, "/Songs");
   let queueRef = rtdb.ref(db, "/Queue");
   let songList = [];
-  const searchWrapper = document.querySelector(".search-input");
+  /*const searchWrapper = document.querySelector(".search-input");
   const inputBox = searchWrapper.querySelector("input");
 
 inputBox.onkeyup = (e)=>{
@@ -39,12 +37,13 @@ inputBox.onkeyup = (e)=>{
       $("#suggestions").append(`<li id="song">${song} </li>`);
     }
   });
-}
+}*/
+
+
   $("ul").click(function() {
     //let mesg = $("#song").val();
     //alert($(this).text());
     rtdb.push(queueRef, $(this).text());
-    rtdb.push(songRef, "songtest");
   });
 
   //let testObj = "Test457";
