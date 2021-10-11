@@ -40,9 +40,10 @@ inputBox.onkeyup = (e)=>{
 }*/
 
 
-  $("ul").click(function() {
-    //let mesg = $("#song").val();
+$('#allSongs').on('click','li', function() {
+    //let mesg = $("#song").text();
     //alert($(this).text());
+    //alert(mesg);
     rtdb.push(queueRef, $(this).text());
   });
 
@@ -53,7 +54,7 @@ inputBox.onkeyup = (e)=>{
     let keys = Object.keys(ss.val());
     $("#allSongs").html("");
     keys.map(test=>{
-      songList.push(ss.val()[test].title);
+      songList.push(ss.val()[test].title);     
       $("#allSongs").append(`<li id="song">${ss.val()[test].title} </li>`);
     })
     

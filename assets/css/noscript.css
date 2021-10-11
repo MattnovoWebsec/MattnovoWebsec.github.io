@@ -16,3 +16,7 @@
 		-ms-transform: none;
 		transform: none;
 	}
+
+	ol, ul {
+		list-style: none;
+	}
