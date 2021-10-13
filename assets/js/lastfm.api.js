@@ -2,7 +2,7 @@ function LastFM(options){
 	/* Set default values for required options. */
 	var apiKey    = options.apiKey    || '3887358727ab4d72a6a41c294e6f21fa';
 	var apiSecret = options.apiSecret || 'bdf46ad054d971ee492a224e89c08e19';
-	var apiUrl    = options.apiUrl    || 'http://ws.audioscrobbler.com/2.0/';
+	var apiUrl    = options.apiUrl    || 'https://ws.audioscrobbler.com/2.0/';
 	var cache     = options.cache     || undefined;
 
 	/* Set API key. */
@@ -357,7 +357,7 @@ function LastFM(options){
 			/* Save API URL and set new one (needs to be done due to a cookie!). */
 			var previuousApiUrl = apiUrl;
 
-			apiUrl = 'http://ext.last.fm/2.0/';
+			apiUrl = 'https://ext.last.fm/2.0/';
 
 			signedCall('auth.getWebSession', null, null, callbacks);
 

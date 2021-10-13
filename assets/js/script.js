@@ -98,7 +98,8 @@ $('#allSongs').on('click','li', function() {
         $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
       }, error: function(code, message){
         //console.log("test");
-        cover = "http://www.fillmurray.com/200/300";
+        cover = "https://www.fillmurray.com/200/300";
+        console.log("test");
         $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
       }});   
       
