@@ -39,6 +39,28 @@ inputBox.onkeyup = (e)=>{
   });
 }*/
 
+var input = document.getElementById('search');
+input.onkeyup = function () {
+    var filter = input.value.toUpperCase();
+
+    const ul = document.getElementById('allSongs');
+    const lis= ul.getElementsByTagName('li');
+    
+    console.log(lis);
+    for (var i = 0; i < lis.length; i++) {
+        
+        var name = lis[i].innerHTML;
+        console.log("name");
+        console.log(name);
+        console.log("filter");
+        console.log(filter);
+        if (name.toUpperCase().indexOf(filter) == 0) 
+            lis[i].style.display = 'list-item';
+        else
+            lis[i].style.display = 'none';
+    }
+}
+
 
 $('#allSongs').on('click','li', function() {
     //let mesg = $("#song").text();
@@ -55,7 +77,7 @@ $('#allSongs').on('click','li', function() {
     $("#allSongs").html("");
     keys.map(test=>{
       songList.push(ss.val()[test].title);     
-      $("#allSongs").append(`<li id="song">${ss.val()[test].title} </li>`);
+      $("#allSongs").append(`<li id="song">${ss.val()[test].title + " by " + ss.val()[test].artist} </li>`);
     })
     
   //alert(JSON.stringify(ss.val()));
