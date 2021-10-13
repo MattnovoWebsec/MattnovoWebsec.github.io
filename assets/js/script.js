@@ -39,6 +39,19 @@ inputBox.onkeyup = (e)=>{
   });
 }*/
 
+/* Create a LastFM object */
+var lastfm = new LastFM({
+  apiKey    : '3887358727ab4d72a6a41c294e6f21fa',
+  apiSecret : 'bdf46ad054d971ee492a224e89c08e19',
+  cache     : undefined
+});
+
+/*lastfm.track.getInfo({track: 'Grace', artist: 'Lewis Capaldi'}, {success: function(data){
+  console.log(data.track.album.image[0]["#text"]);
+}, error: function(code, message){
+  
+}});*/
+
 var input = document.getElementById('search');
 input.onkeyup = function () {
     var filter = input.value.toUpperCase();
@@ -76,8 +89,21 @@ $('#allSongs').on('click','li', function() {
     let keys = Object.keys(ss.val());
     $("#allSongs").html("");
     keys.map(test=>{
-      songList.push(ss.val()[test].title);     
-      $("#allSongs").append(`<li id="song">${ss.val()[test].title + " by " + ss.val()[test].artist} </li>`);
+      songList.push(ss.val()[test].title); 
+      let cover;
+      lastfm.track.getInfo({track: ss.val()[test].title, artist: ss.val()[test].artist}, {success: function(data){
+        cover = data.track.album.image[2]["#text"];
+        console.log(data.track.album.image[0]["#text"]);
+        console.log(cover);
+        $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
+      }, error: function(code, message){
+        //console.log("test");
+        cover = "http://www.fillmurray.com/200/300";
+        $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
+      }});   
+      
+       
+      
     })
     
   //alert(JSON.stringify(ss.val()));
