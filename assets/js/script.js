@@ -23,13 +23,24 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let db = rtdb.getDatabase(app);
   let songRef = rtdb.ref(db, "/Songs");
   let queueRef = rtdb.ref(db, "/Queue");
+  let userRef = rtdb.ref(db, "/users");
   let songList = [];
   
+  let admin = false;
   
   let auth = fbauth.getAuth(app);
   
   let renderUser = function(userObj){
     $("#logoutDiv").append(`<button type="button" id="logout">Logout</button>`);
+    console.log(userObj.uid);
+    let id = userObj.uid;
+    let adminC = rtdb.ref(db, `/users/${id}/roles/admin`);
+    rtdb.onValue(adminC, ss=>{
+      if (ss.val() == false){
+        $("#first").hide();
+      }
+      //$("#first").hide();
+    });
     $("#logout").on("click", ()=>{
       fbauth.signOut(auth);
     })
@@ -64,6 +75,8 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     }
     fbauth.createUserWithEmailAndPassword(auth, email, p1).then(somedata=>{
       let uid = somedata.user.uid;
+      let userRef = rtdb.ref(db, `/users/${uid}/username`);
+      rtdb.set(userRef, email);
       let userRoleRef = rtdb.ref(db, `/users/${uid}/roles/admin`);
       rtdb.set(userRoleRef, false);
       console.log("Register success")
@@ -82,6 +95,11 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     let pwd = $("#logpass").val();
     fbauth.signInWithEmailAndPassword(auth, email, pwd).then(
       somedata=>{
+        let uid = somedata.user.uid;
+        let userRoleRef = rtdb.ref(db, `/users/${uid}/roles/admin`);
+        if (userRoleRef == false){
+          $('#first').hide();
+        }
       }).catch(function(error) {
         // Handle Errors here.
         var errorCode = error.code;
@@ -134,7 +152,8 @@ $('#allSongs').on('click','li', function() {
   //let testObj = "Test457";
   //rtdb.push(titleRef, testObj);
   rtdb.onValue(songRef, ss=>{
-    $("#login").hide();
+    $("#login").hide();//change these two later
+    
     //alert(JSON.stringify(ss.val()));
     let keys = Object.keys(ss.val());
     $("#allSongs").html("");
