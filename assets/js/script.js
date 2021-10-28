@@ -180,9 +180,13 @@ $('#allSongs').on('click','li', function() {
 
     })
     //number of songs per page
-    let num_page = 1;
+    let num_page = $("#songsPerPage").val();
+    num_page = Math.min(num_page, songList.length);
+    console.log(num_page);
+    console.log($("#songsPerPage").val());
     //songlist length / num page
-    let total_pages = Math.round(songList.length / num_page);
+    let total_pages = Math.max(1, Math.round(songList.length / num_page));
+    console.log(total_pages);
     let cover;
     let counter = 0;
 
@@ -209,7 +213,7 @@ $('#allSongs').on('click','li', function() {
       }
       counter = counter + num_page;
       song_map[i] = tempList;
-      //console.log(song_map[i][0]);
+      //console.log(song_map);
       //console.log(tempList);
     }
     for(let i = 0; i < song_map[1].length; i++){
@@ -236,7 +240,51 @@ $('#allSongs').on('click','li', function() {
   //alert(JSON.stringify(ss.val()));
   });
 
+$(`#refresh`).on('click', function() {
+  Object.keys(song_map).forEach(key => {
+    delete song_map[key];
+  })
+    let num_page = $("#songsPerPage").val();
+    num_page = Math.min(num_page, songList.length);
+    //console.log(num_page);
+    //console.log($("#songsPerPage").val());
+    //songlist length / num page
+    let total_pages = Math.max(1, Math.round(songList.length / num_page));
+    console.log(total_pages);
+    let cover;
+    let counter = 0;
+    $("#songButtons").empty();
+    for(let i = 1; i <= total_pages; i++){
+      //turn this li into buttons... and edit cs so that they are all side by
+      //$("#allSongs").append(`<li id=${i} class="tabs">Testing tab ${i}</li>`);
+      
+      $("#songButtons").append(`<button id=${i} class="tabs">${i}</button>`);
 
+      let tempList = [];
+
+      for(let j = counter; j < counter + num_page; j++){
+      
+
+        let title = songList[j].songTitle;
+        let artist = songList[j].artist;
+        let song_cover = grabCover(title, artist);
+
+        tempList.push({title, artist, song_cover});
+        
+      }
+      counter = counter + num_page;
+      song_map[i] = tempList;
+      //console.log(song_map);
+      //console.log(tempList);
+    } 
+    $(`#allSongs`).empty();
+    for(let i = 0; i < song_map[1].length; i++){
+      //console.log(song_map[this.id][i]);
+       let cover = "https://www.fillmurray.com/200/300";
+        $(`#allSongs`).append(`<li id="song"><img src=${cover}>${song_map[1][i].title + " by " + song_map[1][i].artist}</a> </li>`);
+    }   
+}
+);
 
 function grabCover(song, artist){
   let song_cover;
