@@ -25,6 +25,8 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let queueRef = rtdb.ref(db, "/Queue");
   let userRef = rtdb.ref(db, "/users");
   
+
+  let tempSongList = []; //songs before cover is added
   let songList = [];
   
   let song_map = new Object();
@@ -114,6 +116,19 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
 
 
+
+  rtdb.onValue(queueRef, ss=>{
+    //alert(JSON.stringify(ss.val()));
+    let keys = Object.keys(ss.val());
+    $("#queueSongs").html("");
+    keys.map(test=>{
+  
+      $("#queueSongs").append(`<li id="song">${ss.val()[test]} </li>`);
+    })
+    
+  //alert(JSON.stringify(ss.val()));
+  });
+
 var lastfm = new LastFM({
   apiKey    : '3887358727ab4d72a6a41c294e6f21fa',
   apiSecret : 'bdf46ad054d971ee492a224e89c08e19',
@@ -174,18 +189,51 @@ $('#allSongs').on('click','li', function() {
         
         $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
       }});*/   
-      songList.push({songTitle, artist});
+      tempSongList.push({songTitle, artist});
 
 
 
     })
+    //processSongs();
+    addCovers();
+    
+  });
+    
+  function addCovers(){
+    for(let i = 0; i< tempSongList.length; i++){
+      //console.log(tempSongList[i].songTitle, tempSongList[i].artist);
+      grabCover(i, tempSongList[i].songTitle, tempSongList[i].artist, makeSongList);
+    }
+  }
+
+
+  function makeSongList(index, song_cover){
+    //console.log("working?" + index + " " + song_cover);
+    let songTitle = tempSongList[index].songTitle;
+    let artist = tempSongList[index].artist;
+    songList.push({songTitle, artist, song_cover});
+
+    if(songList.length == tempSongList.length){
+      processSongs();
+    }
+
+  }
+
+  function processSongs(){    
     //number of songs per page
+    /*console.log("FINAL TEST");
+    console.log(songList.length);
+    for(let i = 0; i< songList.length; i++){
+      console.log(songList[i]);
+      
+    }*/
+
     let num_page = $("#songsPerPage").val();
     num_page = Math.min(num_page, songList.length);
-    console.log(num_page);
-    console.log($("#songsPerPage").val());
+    //console.log(num_page);
+    //console.log($("#songsPerPage").val());
     //songlist length / num page
-    let total_pages = Math.max(1, Math.round(songList.length / num_page));
+    let total_pages = Math.max(1, Math.ceil(songList.length / num_page));
     console.log(total_pages);
     let cover;
     let counter = 0;
@@ -202,32 +250,34 @@ $('#allSongs').on('click','li', function() {
       let tempList = [];
 
       for(let j = counter; j < counter + num_page; j++){
-      
+        if(!(j >= songList.length)){
 
         let title = songList[j].songTitle;
         let artist = songList[j].artist;
-        let song_cover = grabCover(title, artist);
+        let cover = songList[j].song_cover;
+        //let song_cover = grabCover(title, artist);
 
-        tempList.push({title, artist, song_cover});
-        
+        tempList.push({title, artist, cover});
+        }
       }
       counter = counter + num_page;
       song_map[i] = tempList;
       //console.log(song_map);
       //console.log(tempList);
     }
+    $("#allSongs").empty();
     for(let i = 0; i < song_map[1].length; i++){
       //console.log(song_map[this.id][i]);
-       let cover = "https://www.fillmurray.com/200/300";
-        $(`#allSongs`).append(`<li id="song"><img src=${cover}>${song_map[1][i].title + " by " + song_map[1][i].artist}</a> </li>`);
+       //let cover = "https://www.fillmurray.com/200/300";
+        $(`#allSongs`).append(`<li id="song"><img src=${song_map[1][i].cover}>${song_map[1][i].title + " by " + song_map[1][i].artist}</a> </li>`);
     }    
     $(".tabs").click(function() {
       $("#allSongs").empty();
       //console.log(this.id);
-      let cover = "https://www.fillmurray.com/200/300";
+      //let cover = "https://www.fillmurray.com/200/300";
       for(let i = 0; i < song_map[this.id].length; i++){
         //console.log(song_map[this.id][i]);
-          $(`#allSongs`).append(`<li id="song"><img src=${cover}>${song_map[this.id][i].title + " by " + song_map[this.id][i].artist}</a> </li>`);
+          $(`#allSongs`).append(`<li id="song"><img src=${song_map[this.id][i].cover}>${song_map[this.id][i].title + " by " + song_map[this.id][i].artist}</a> </li>`);
       }
       //showByID(this.id);
     });
@@ -238,82 +288,35 @@ $('#allSongs').on('click','li', function() {
     */
 
   //alert(JSON.stringify(ss.val()));
-  });
+  }
 
 $(`#refresh`).on('click', function() {
-  Object.keys(song_map).forEach(key => {
-    delete song_map[key];
-  })
-    let num_page = $("#songsPerPage").val();
-    num_page = Math.min(num_page, songList.length);
-    //console.log(num_page);
-    //console.log($("#songsPerPage").val());
-    //songlist length / num page
-    let total_pages = Math.max(1, Math.round(songList.length / num_page));
-    console.log(total_pages);
-    let cover;
-    let counter = 0;
-    $("#songButtons").empty();
-    for(let i = 1; i <= total_pages; i++){
-      //turn this li into buttons... and edit cs so that they are all side by
-      //$("#allSongs").append(`<li id=${i} class="tabs">Testing tab ${i}</li>`);
-      
-      $("#songButtons").append(`<button id=${i} class="tabs">${i}</button>`);
+  //$("#songNav").empty();
+  $("#songButtons").empty();
+  processSongs();
+});
 
-      let tempList = [];
-
-      for(let j = counter; j < counter + num_page; j++){
-      
-
-        let title = songList[j].songTitle;
-        let artist = songList[j].artist;
-        let song_cover = grabCover(title, artist);
-
-        tempList.push({title, artist, song_cover});
-        
-      }
-      counter = counter + num_page;
-      song_map[i] = tempList;
-      //console.log(song_map);
-      //console.log(tempList);
-    } 
-    $(`#allSongs`).empty();
-    for(let i = 0; i < song_map[1].length; i++){
-      //console.log(song_map[this.id][i]);
-       let cover = "https://www.fillmurray.com/200/300";
-        $(`#allSongs`).append(`<li id="song"><img src=${cover}>${song_map[1][i].title + " by " + song_map[1][i].artist}</a> </li>`);
-    }   
-}
-);
-
-function grabCover(song, artist){
+function grabCover(index, song, artist, callback){
   let song_cover;
+  //let index = 1;
   lastfm.track.getInfo({track: song, artist: artist}, {success: function(data){
+
     song_cover = data.track.album.image[2]["#text"];
-    console.log(song_cover);
-    return song_cover;
+    //console.log(song_cover);
+    return callback(index, song_cover);
     //$(`#${i}`).append(`<li id="song"><img src=${cover}>${songList[j].songTitle + " by " + songList[j].artist}</a> </li>`);//add tabulation here
     
   }, error: function(code, message){
     song_cover = "https://www.fillmurray.com/200/300";
-    console.log(song_cover);
-    return song_cover;
+    //console.log(song_cover);
+    return callback(index, song_cover);
     //$(`#${i}`).append(`<li id="song"><img src=${cover}>${songList[j].songTitle + " by " + songList[j].artist}</a> </li>`);//add tabulation here
   }});
 }
 
-rtdb.onValue(queueRef, ss=>{
-    //alert(JSON.stringify(ss.val()));
-    let keys = Object.keys(ss.val());
-    $("#queueSongs").html("");
-    keys.map(test=>{
-  
-      $("#queueSongs").append(`<li id="song">${ss.val()[test]} </li>`);
-    })
-    
-  //alert(JSON.stringify(ss.val()));
-  });
-
+function returnCover(song_cover){
+  return song_cover;
+}
   
 //rtdb.update(titleRef, newObj);
 //rtdb.push(peopleRef, newObj);
