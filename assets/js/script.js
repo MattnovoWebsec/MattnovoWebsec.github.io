@@ -36,16 +36,30 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let auth = fbauth.getAuth(app);
   
   let renderUser = function(userObj){
+    $("#logoutDiv").empty();
     $("#logoutDiv").append(`<button type="button" id="logout">Logout</button>`);
     //console.log(userObj.uid);
+    console.log(userObj.uid);
     let id = userObj.uid;
     let adminC = rtdb.ref(db, `/users/${id}/roles/admin`);
     rtdb.onValue(adminC, ss=>{
-      if (ss.val() == false){
-        $("#first").hide();
+      console.log(ss.val());
+      if (ss.val() == true){
+        console.log("should be showing");
+        $("#first").show();
       }
       //$("#first").hide();
     });
+    /*, ss=>{
+      console.log(ss);
+      if (ss.val() == true){
+        $("#first").show();
+        console.log("should be shown");
+      }else{
+        $("#first").hide();
+      }
+      */
+      //$("#first").hide();
     $("#logout").on("click", ()=>{
       fbauth.signOut(auth);
     })
@@ -64,8 +78,11 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
           $("#logoutDiv").show();
           renderUser(user);
         } else {
+          $("#logoutDiv").hide();
           $("#login").show();
           $('#showLogin').show();
+          $("#first").hide();
+          //console.log("put code here");
           //$("#app").html("");
         }
   });  
@@ -101,10 +118,13 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     fbauth.signInWithEmailAndPassword(auth, email, pwd).then(
       somedata=>{
         let uid = somedata.user.uid;
-        let userRoleRef = rtdb.ref(db, `/users/${uid}/roles/admin`);
-        if (userRoleRef == false){
-          $('#first').hide();
-        }
+        /*let userRoleRef = rtdb.ref(db, `/users/${uid}/roles/admin`);
+        if (userRoleRef == true){
+          $('#first').show();
+          console.log("should be show");
+        }else{
+          $("#first").hide();
+        }*/
       }).catch(function(error) {
         // Handle Errors here.
         var errorCode = error.code;
@@ -148,7 +168,7 @@ input.onkeyup = function () {
     const ul = document.getElementById('allSongs');
     const lis= ul.getElementsByTagName('li');
     
-    console.log(lis);
+    //console.log(lis);
     for (var i = 0; i < lis.length; i++) {
         
         var name = lis[i].innerHTML;
