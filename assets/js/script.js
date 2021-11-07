@@ -231,11 +231,11 @@ $('#allSongs').on('click','li', function() {
 
     for(let i = 0; i < songList.length; i++){
       if(songList[i].song_length != 0){
-        totalTime = totalTime + songList[i].song_length;
+        totalTime = totalTime + (songList[i].song_length / 1000);
       }
     }
  
-    totalTime = millisToMinutesAndSeconds(totalTime);
+    totalTime = millisToMinutesAndSeconds(totalTime * 1000);
 
     return totalTime;
   }
