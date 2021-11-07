@@ -36,8 +36,9 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let auth = fbauth.getAuth(app);
   
   let renderUser = function(userObj){
-    $("#logoutDiv").empty();
-    $("#logoutDiv").append(`<button type="button" id="logout">Logout</button>`);
+    $("#logout").show();
+    //$("#logoutDiv").empty();
+    //$("#logoutDiv").append(`<button type="button" id="logout">Logout</button>`);
     //console.log(userObj.uid);
     console.log(userObj.uid);
     let id = userObj.uid;
@@ -75,10 +76,10 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
         if (!!user){
           $('#showLogin').hide();
           $("#login").hide();
-          $("#logoutDiv").show();
+          $("#logout").show();
           renderUser(user);
         } else {
-          $("#logoutDiv").hide();
+          $("#logout").hide();
           $("#login").show();
           $('#showLogin').show();
           $("#first").hide();
