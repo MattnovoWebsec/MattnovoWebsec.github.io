@@ -30,11 +30,16 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let songList = [];
   
   let song_map = new Object();
-  
+  let cover_map = new Object();
+
+
   let admin = false;
   
   let auth = fbauth.getAuth(app);
   
+
+
+
   let renderUser = function(userObj){
     $("#logout").show();
     //$("#logoutDiv").empty();
@@ -65,6 +70,16 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
       fbauth.signOut(auth);
     })
   }
+
+ /* $('#openPopup').on("click", ()=>{
+    console.log("should work");
+    document.getElementById('test').style.display = 'block';
+  });*/
+
+  $('#closePopup').on("click", ()=>{
+    document.getElementById('test').style.display = 'none';
+  });
+
 
   $('#showLogin').on("click", ()=>{
     $("#login").show();
@@ -182,10 +197,31 @@ input.onkeyup = function () {
 
 
 $('#allSongs').on('click','li', function() {
-    //let mesg = $("#song").text();
-    //alert($(this).text());
-    //alert(mesg);
-    rtdb.push(queueRef, $(this).text());
+    //after confirmation add below line to confirm function
+    //rtdb.push(queueRef, $(this).text());
+
+    //need to be able to eventually get just the song name not the artist as well
+    let testCover = cover_map[$(this).text()];
+    $("#songName").html($(this).text());
+    document.getElementById('test').style.display = 'block';
+    let songName = $(this).text();
+    
+    $("#submitAddSong").on('click', ()=>
+    {
+      if($("#inputSinger").val() == ""){
+        alert("You must enter a name before submitting");
+      }else{
+        let singer = $("#inputSinger").val();
+        console.log("works");
+        console.log(songName, singer);
+        document.getElementById('test').style.display = 'none';
+        let theSong = $(this).text();
+        rtdb.push(queueRef, {song: theSong, singer: singer});
+        $("#inputSinger").empty();
+      }
+      
+    });
+    
   });
 
   //let testObj = "Test457";
@@ -277,12 +313,13 @@ $('#allSongs').on('click','li', function() {
         let artist = songList[j].artist;
         let cover = songList[j].song_cover;
         //let song_cover = grabCover(title, artist);
-
+        cover_map[title] = cover;
         tempList.push({title, artist, cover});
         }
       }
       counter = counter + num_page;
       song_map[i] = tempList;
+      
       //console.log(song_map);
       //console.log(tempList);
     }
