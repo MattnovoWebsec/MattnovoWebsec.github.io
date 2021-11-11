@@ -28,6 +28,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
   let tempSongList = []; //songs before cover is added
   let songList = [];
+  let songListCopy = [];
 
   let queueList = [];
   
@@ -37,6 +38,8 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
   let songInfo_Name = new Object();
 
+
+  let lastFiltered ='';
 
   let admin = false;
   
@@ -184,21 +187,43 @@ var lastfm = new LastFM({
 }});*/
 
 var input = document.getElementById('search');
-input.onkeyup = function () {
+input.onkeyup = function (e) {
+  if(e.keyCode == 8){
+    input.value = '';
+    songList.length = [];
+    for(let i = 0; i < songListCopy.length; i++){
+      songList.push(songListCopy[i]);
+    }
+  }
+    /*songList=[];
+    for(let i = 0; i < songListCopy.length; i++){
+      songList.push(songListCopy[i]);
+    }*/
+    //console.log(songList);
     var filter = input.value;
-
-    const ul = document.getElementById('allSongs');
-    const lis= ul.getElementsByTagName('li');
+    console.log(filter);
+    console.log(songList);
+    //const ul = document.getElementById('allSongs');
+    //const lis= ul.getElementsByTagName('li');
     
     //console.log(lis);
-    for (var i = 0; i < lis.length; i++) {
+    for (var i = 0; i < songList.length; i++) {
         
-        var name = lis[i].innerHTML;
-        if (name.toLowerCase().includes(filter.toLowerCase())) 
-            lis[i].style.display = 'list-item';
-        else
-            lis[i].style.display = 'none';
+        var name = songList[i].songTitle;
+        if (!(name.toLowerCase().includes(filter.toLowerCase()))) 
+        {
+          //songList[i].style.display = 'list-item';
+          songList.splice(i, 1);
+        }
+        /*else{
+          //lis[i].style.display = 'none';
+          
+        }*/
+            
     }
+    processSongs();
+
+    
 }
 
 
@@ -307,14 +332,15 @@ $('#allSongs').on('click','li', function() {
     let songTitle = tempSongList[index].songTitle;
     let artist = tempSongList[index].artist;
     songList.push({songTitle, artist, song_cover, song_length});
-
+    songListCopy.push({songTitle, artist, song_cover, song_length});
     if(songList.length == tempSongList.length){
       processSongs();
     }
 
   }
 
-  function processSongs(){    
+  function processSongs(){ 
+    if(songList.length != 0){   
     //number of songs per page
     /*console.log("FINAL TEST");
     console.log(songList.length);
@@ -335,8 +361,8 @@ $('#allSongs').on('click','li', function() {
 
 
     //$("#allSongs").append(`<nav id="songNav"`);
-    $("#songNav").append(`<div id="songButtons"></div>`);
-
+    //$("#songNav").append(`<div id="songButtons"></div>`);
+    $("#songButtons").empty();
     for(let i = 1; i <= total_pages; i++){
       //turn this li into buttons... and edit cs so that they are all side by
       //$("#allSongs").append(`<li id=${i} class="tabs">Testing tab ${i}</li>`);
@@ -364,6 +390,7 @@ $('#allSongs').on('click','li', function() {
       //console.log(song_map);
       //console.log(tempList);
     }
+  
     $("#allSongs").empty();
     for(let i = 0; i < song_map[1].length; i++){
       //console.log(song_map[this.id][i]);
@@ -381,6 +408,11 @@ $('#allSongs').on('click','li', function() {
       }
       //showByID(this.id);
     });
+
+  }else{
+    $('#allSongs').empty();
+    $(`#allSongs`).append(`<li id="song">NO SONGS THAT MATCH THE SEARCH</li>`);
+  }
     /*
     console.log("test");
     console.log(songList)
@@ -405,7 +437,6 @@ function grabCover(index, song, artist, callback){
   let song_cover;
   lastfm.track.getInfo({track: song, artist: artist}, {success: function(data){
     let songTime = data.track.duration;
-    console.log(data.track);
     song_cover = data.track.album.image[2]["#text"];
     return callback(index, song_cover, songTime);
   }, error: function(code, message){
