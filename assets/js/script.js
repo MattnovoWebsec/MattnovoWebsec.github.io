@@ -28,10 +28,14 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
   let tempSongList = []; //songs before cover is added
   let songList = [];
+
+  let queueList = [];
   
   let song_map = new Object();
   let cover_map = new Object();
 
+
+  let songInfo_Name = new Object();
 
 
   let admin = false;
@@ -76,6 +80,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     console.log("should work");
     document.getElementById('test').style.display = 'block';
   });*/
+
 
   $('#closePopup').on("click", ()=>{
     document.getElementById('test').style.display = 'none';
@@ -159,8 +164,8 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     let keys = Object.keys(ss.val());
     $("#queueSongs").html("");
     keys.map(test=>{
-  
-      $("#queueSongs").append(`<li id="song">${ss.val()[test]} </li>`);
+      
+      $("#queueSongs").append(`<li id="song">${ss.val()[test].singer} singing ${ss.val()[test].song} by ${ss.val()[test].artist}</li>`);
     })
     
   //alert(JSON.stringify(ss.val()));
@@ -198,27 +203,28 @@ input.onkeyup = function () {
 
 
 $('#allSongs').on('click','li', function() {
+  
     //after confirmation add below line to confirm function
     //rtdb.push(queueRef, $(this).text());
     let currWaitTime = checkWaitTime();
     $("#waitTime").html(currWaitTime);
     //need to be able to eventually get just the song name not the artist as well
     let testCover = cover_map[$(this).text()];
+    //console.log(testCover);
     $("#songName").html($(this).text());
     document.getElementById('test').style.display = 'block';
     let songName = $(this).text();
-    
+    //console.log(songInfo_Name[songName]);
     $("#submitAddSong").on('click', ()=>
     {
       if($("#inputSinger").val() == ""){
         alert("You must enter a name before submitting");
       }else{
         let singer = $("#inputSinger").val();
-        console.log("works");
-        console.log(songName, singer);
         document.getElementById('test').style.display = 'none';
         let theSong = $(this).text();
-        rtdb.push(queueRef, {song: theSong, singer: singer});
+        
+        rtdb.push(queueRef, {singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
         $("#inputSinger").empty();
       }
       
@@ -227,14 +233,29 @@ $('#allSongs').on('click','li', function() {
   });
 
   function checkWaitTime(){
+
+    //have to change to queueList instead of songList
+
     let totalTime = 0;
 
-    for(let i = 0; i < songList.length; i++){
+    /*for(let i = 0; i < songList.length; i++){
       if(songList[i].song_length != 0){
         totalTime = totalTime + (songList[i].song_length / 1000);
       }
-    }
- 
+    }*/
+
+    rtdb.onValue(queueRef, ss=>{
+      //alert(JSON.stringify(ss.val()));
+      let keys = Object.keys(ss.val());
+      keys.map(test=>{
+        let currTime = ss.val()[test].duration;
+        if(currTime != 0){
+          totalTime = totalTime + (currTime / 1000);
+        }
+      })
+      
+    //alert(JSON.stringify(ss.val()));
+    });
     totalTime = millisToMinutesAndSeconds(totalTime * 1000);
 
     return totalTime;
@@ -250,6 +271,7 @@ $('#allSongs').on('click','li', function() {
     $("#allSongs").html("");
     keys.map(test=>{
       let songTitle = ss.val()[test].title;
+      
       let artist = ss.val()[test].artist;
       
       /*lastfm.track.getInfo({track: ss.val()[test].title, artist: ss.val()[test].artist}, {success: function(data){
@@ -329,6 +351,8 @@ $('#allSongs').on('click','li', function() {
         let artist = songList[j].artist;
         let cover = songList[j].song_cover;
         let length = songList[j].song_length;
+
+        songInfo_Name[title] = {artist, cover, length};
         //let song_cover = grabCover(title, artist);
         cover_map[title] = cover;
         tempList.push({title, artist, cover, length});
@@ -344,7 +368,7 @@ $('#allSongs').on('click','li', function() {
     for(let i = 0; i < song_map[1].length; i++){
       //console.log(song_map[this.id][i]);
        //let cover = "https://www.fillmurray.com/200/300";
-        $(`#allSongs`).append(`<li id="song"><img src=${song_map[1][i].cover}>${song_map[1][i].title + " by " + song_map[1][i].artist}</a> </li>`);
+        $(`#allSongs`).append(`<li id="song"><img src=${song_map[1][i].cover}>${song_map[1][i].title}</li>`);
     }    
     $(".tabs").click(function() {
       $("#allSongs").empty();
@@ -353,7 +377,7 @@ $('#allSongs').on('click','li', function() {
       for(let i = 0; i < song_map[this.id].length; i++){
         
         //console.log(song_map[this.id][i]);
-          $(`#allSongs`).append(`<li id="song"><img src=${song_map[this.id][i].cover}>${song_map[this.id][i].title + " by " + song_map[this.id][i].artist}</a> </li>`);
+          $(`#allSongs`).append(`<li id="song"><img src=${song_map[this.id][i].cover}>${song_map[this.id][i].title}</li>`);
       }
       //showByID(this.id);
     });
@@ -367,7 +391,6 @@ $('#allSongs').on('click','li', function() {
   }
 
 $(`#refresh`).on('click', function() {
-  //$("#songNav").empty();
   $("#songButtons").empty();
   processSongs();
 });
@@ -380,20 +403,14 @@ function millisToMinutesAndSeconds(millis) {
 
 function grabCover(index, song, artist, callback){
   let song_cover;
-  //let index = 1;
   lastfm.track.getInfo({track: song, artist: artist}, {success: function(data){
-
-    //let songTime = millisToMinutesAndSeconds(data.track.duration);
     let songTime = data.track.duration;
+    console.log(data.track);
     song_cover = data.track.album.image[2]["#text"];
     return callback(index, song_cover, songTime);
-    //$(`#${i}`).append(`<li id="song"><img src=${cover}>${songList[j].songTitle + " by " + songList[j].artist}</a> </li>`);//add tabulation here
-    
   }, error: function(code, message){
     song_cover = "https://www.fillmurray.com/200/300";
-    //console.log(song_cover);
     return callback(index, song_cover, 0);
-    //$(`#${i}`).append(`<li id="song"><img src=${cover}>${songList[j].songTitle + " by " + songList[j].artist}</a> </li>`);//add tabulation here
   }});
 }
 
