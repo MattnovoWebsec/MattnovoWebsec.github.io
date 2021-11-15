@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
 import * as rtdb from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
 import $ from "https://cdn.skypack.dev/jquery@3.6.0";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
 import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
   // TODO: Add SDKs for Firebase products that you want to use
   // https://firebase.google.com/docs/web/setup#available-libraries
@@ -46,6 +47,15 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let auth = fbauth.getAuth(app);
   
 
+  signInAnonymously(auth)
+  .then(() => {
+    console.log("testing");
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // ...
+  });
 
 
   let renderUser = function(userObj){
@@ -85,6 +95,23 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   });*/
 
 
+  $('#seeSongs').on("click", ()=>{
+    let user = auth.currentUser;
+    let u_id = user.uid;
+    rtdb.onValue(queueRef, ss=>{
+      //alert(JSON.stringify(ss.val()));
+      let keys = Object.keys(ss.val());
+      keys.map(test=>{
+        if(ss.val()[test].user_id == u_id){
+          $('#mySongs').append(`<li> ${ss.val()[test].song} </li>`)
+        }
+      })
+      
+    //alert(JSON.stringify(ss.val()));
+    });
+});
+
+
   $('#closePopup').on("click", ()=>{
     document.getElementById('test').style.display = 'none';
   });
@@ -98,6 +125,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   fbauth.onAuthStateChanged(auth, user => {
         
         if (!!user){
+          //console.log(user.uid);
           $('#showLogin').hide();
           $("#login").hide();
           $("#logout").show();
@@ -248,8 +276,10 @@ $('#allSongs').on('click','li', function() {
         let singer = $("#inputSinger").val();
         document.getElementById('test').style.display = 'none';
         let theSong = $(this).text();
-        
-        rtdb.push(queueRef, {singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+        let user = auth.currentUser;
+        let user_id = user.uid;
+        console.log(user_id);
+        rtdb.push(queueRef, {user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
         $("#inputSinger").empty();
       }
       
