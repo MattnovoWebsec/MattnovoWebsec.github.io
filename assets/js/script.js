@@ -35,6 +35,8 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   
   let song_map = new Object();
   let cover_map = new Object();
+  let queueOrder_map = new Object();
+  let currLine = 1;
 
 
   let songInfo_Name = new Object();
@@ -49,13 +51,15 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
   signInAnonymously(auth)
   .then(() => {
-    console.log("testing");
+    //console.log("testing");
   })
   .catch((error) => {
     const errorCode = error.code;
     const errorMessage = error.message;
     // ...
   });
+
+
 
 
   let renderUser = function(userObj){
@@ -89,9 +93,9 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     })
   }
 
- /* $('#openPopup').on("click", ()=>{
+  /*$('#openPopup').on("click", ()=>{
     console.log("should work");
-    document.getElementById('test').style.display = 'block';
+    document.getElementById('ready').style.display = 'block';
   });*/
 
 
@@ -114,6 +118,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
   $('#closePopup').on("click", ()=>{
     document.getElementById('test').style.display = 'none';
+    document.getElementById('ready').style.display = 'none';
   });
 
 
@@ -188,15 +193,37 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   });
 
 
-
+  $('#queueSongs').on("click",'li', function() {
+    let test = this.id;
+    //console.log(test);
+    let removeRef = rtdb.ref(db, `/Queue/${test}`);
+    rtdb.set(removeRef, null);
+  });
 
   rtdb.onValue(queueRef, ss=>{
     //alert(JSON.stringify(ss.val()));
     let keys = Object.keys(ss.val());
     $("#queueSongs").html("");
+    let counter = 0;
+    
     keys.map(test=>{
-      
-      $("#queueSongs").append(`<li id="song">${ss.val()[test].singer} singing ${ss.val()[test].song} by ${ss.val()[test].artist}</li>`);
+      currLine++;
+      let firebase_id = keys[counter];
+      queueOrder_map[firebase_id] = keys[counter];
+      //console.log(firebase_id);
+      counter++;
+      let user = auth.currentUser;
+      let u_id = user.uid;
+      console.log(u_id);
+      console.log(ss.val()[test].user_id);
+      console.log(ss.val()[test].linePlace);
+      if(ss.val()[test].user_id == u_id){
+        if(ss.val()[test].linePlace == 1){
+          console.log("works");
+          document.getElementById('ready').style.display = 'block';
+        }
+      }
+      $("#queueSongs").append(`<li id=${firebase_id}>${ss.val()[test].singer} singing ${ss.val()[test].song} by ${ss.val()[test].artist}</li>`);
     })
     
   //alert(JSON.stringify(ss.val()));
@@ -278,8 +305,8 @@ $('#allSongs').on('click','li', function() {
         let theSong = $(this).text();
         let user = auth.currentUser;
         let user_id = user.uid;
-        console.log(user_id);
-        rtdb.push(queueRef, {user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+        //console.log(user_id);
+        rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
         $("#inputSinger").empty();
       }
       
