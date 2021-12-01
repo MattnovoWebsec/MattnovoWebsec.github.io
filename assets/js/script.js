@@ -25,6 +25,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let songRef = rtdb.ref(db, "/Songs");
   let queueRef = rtdb.ref(db, "/Queue");
   let userRef = rtdb.ref(db, "/users");
+  let missedRef = rtdb.ref(db, "/Missed");
   
 
   let tempSongList = []; //songs before cover is added
@@ -49,15 +50,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let auth = fbauth.getAuth(app);
   
 
-  signInAnonymously(auth)
-  .then(() => {
-    //console.log("testing");
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    // ...
-  });
+  
 
 
 
@@ -100,8 +93,24 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
 
 
   $('#seeSongs').on("click", ()=>{
-    let user = auth.currentUser;
-    let u_id = user.uid;
+    let u_id;
+        if(auth.currentUser != null){
+          let user = auth.currentUser;
+          u_id = user.uid;
+        }else{
+          signInAnonymously(auth)
+          .then(() => {
+          console.log("works");
+          let user = auth.currentUser;
+          u_id = user.uid;
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorMessage);
+          });
+          
+        }
     rtdb.onValue(queueRef, ss=>{
       //alert(JSON.stringify(ss.val()));
       let keys = Object.keys(ss.val());
@@ -200,6 +209,20 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     rtdb.set(removeRef, null);
   });
 
+
+
+  rtdb.onValue(missedRef, ss=>{
+    //alert(JSON.stringify(ss.val()));
+    let user = auth.currentUser;
+    let u_id = user.uid;
+    let keys = Object.keys(ss.val()); 
+    keys.map(test=>{
+      if(ss.val()[test].user_id == u_id){
+        //alert("you missed your song");
+      }
+    });
+  });
+
   rtdb.onValue(queueRef, ss=>{
     //alert(JSON.stringify(ss.val()));
     let keys = Object.keys(ss.val());
@@ -223,11 +246,29 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
           document.getElementById('ready').style.display = 'block';
         }
       }
-      $("#queueSongs").append(`<li id=${firebase_id}>${ss.val()[test].singer} singing ${ss.val()[test].song} by ${ss.val()[test].artist}</li>`);
+      let button_id = firebase_id;
+      $("#queueSongs").append(`<li id=${firebase_id}>${ss.val()[test].singer} singing ${ss.val()[test].song} by ${ss.val()[test].artist}</li><button class="missedSong" id=${button_id}>NO SHOW</button>`);
+      $('.missedSong').on("click", function() {
+        let test = this.id;
+        //console.log(test);
+        let obj;
+        let removeRef = rtdb.ref(db, `/Queue/${test}`);
+        rtdb.onValue(removeRef, ss=>{
+          obj = ss.val();
+          console.log(ss.val().user_id);  
+          rtdb.push(missedRef, obj);
+        //alert(JSON.stringify(ss.val()));
+        });
+        rtdb.set(removeRef, null);
+      });
     })
     
   //alert(JSON.stringify(ss.val()));
   });
+
+  
+
+  
 
 var lastfm = new LastFM({
   apiKey    : '3887358727ab4d72a6a41c294e6f21fa',
@@ -256,8 +297,7 @@ input.onkeyup = function (e) {
     }*/
     //console.log(songList);
     var filter = input.value;
-    console.log(filter);
-    console.log(songList);
+    
     //const ul = document.getElementById('allSongs');
     //const lis= ul.getElementsByTagName('li');
     
@@ -303,11 +343,30 @@ $('#allSongs').on('click','li', function() {
         let singer = $("#inputSinger").val();
         document.getElementById('test').style.display = 'none';
         let theSong = $(this).text();
-        let user = auth.currentUser;
-        let user_id = user.uid;
+        let user_id;
+        if(auth.currentUser != null){
+          let user = auth.currentUser;
+          user_id = user.uid;
+          rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+          $("#inputSinger").empty();
+        }else{
+          signInAnonymously(auth)
+          .then(() => {
+          console.log("works");
+          let user = auth.currentUser;
+          user_id = user.uid;
+          rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+          $("#inputSinger").empty();
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorMessage);
+          });
+          
+        }
         //console.log(user_id);
-        rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
-        $("#inputSinger").empty();
+        
       }
       
     });
