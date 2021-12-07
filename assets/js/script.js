@@ -50,11 +50,6 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let auth = fbauth.getAuth(app);
   
 
-  
-
-
-
-
   let renderUser = function(userObj){
     $("#logout").show();
     //$("#logoutDiv").empty();
