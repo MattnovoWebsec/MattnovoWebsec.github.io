@@ -74,7 +74,7 @@ input, select, textarea {
 }
 
 /* Carousel */
-#topSongs {
+header#topSongs {
 	height: 600px;
 	margin: 0;
 	display: grid;
@@ -135,43 +135,43 @@ input, select, textarea {
 	background-color: #e9ff70;
   }
   
-  input:nth-of-type(1) {
+  header#topSongs input:nth-of-type(1) {
 	grid-column: 2 / 3;
 	grid-row: 2 / 3;
   }
-  input:nth-of-type(1):checked ~ main#carousel {
+  header#topSongs input:nth-of-type(1):checked ~ main#carousel {
 	--position: 1;
   }
   
-  input:nth-of-type(2) {
+  header#topSongs input:nth-of-type(2) {
 	grid-column: 3 / 4;
 	grid-row: 2 / 3;
   }
-  input:nth-of-type(2):checked ~ main#carousel {
+  header#topSongs input:nth-of-type(2):checked ~ main#carousel {
 	--position: 2;
   }
   
-  input:nth-of-type(3) {
+  header#topSongs input:nth-of-type(3) {
 	grid-column: 4 /5;
 	grid-row: 2 / 3;
   }
-  input:nth-of-type(3):checked ~ main#carousel {
+  header#topSongs input:nth-of-type(3):checked ~ main#carousel {
 	--position: 3;
   }
   
-  input:nth-of-type(4) {
+  header#topSongs input:nth-of-type(4) {
 	grid-column: 5 / 6;
 	grid-row: 2 / 3;
   }
-  input:nth-of-type(4):checked ~ main#carousel {
+  header#topSongs input:nth-of-type(4):checked ~ main#carousel {
 	--position: 4;
   }
   
-  input:nth-of-type(5) {
+  #topSongs input:nth-of-type(5) {
 	grid-column: 6 / 7;
 	grid-row: 2 / 3;
   }
-  input:nth-of-type(5):checked ~ main#carousel {
+  #topSongs input:nth-of-type(5):checked ~ main#carousel {
 	--position: 5;
   }
   
