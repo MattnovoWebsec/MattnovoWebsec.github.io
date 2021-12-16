@@ -22,15 +22,17 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   let db = rtdb.getDatabase(app);
-  let songRef = rtdb.ref(db, "/Songs");
+  let songRef = rtdb.ref(db, "/testing");
   let queueRef = rtdb.ref(db, "/Queue");
   let userRef = rtdb.ref(db, "/users");
   let missedRef = rtdb.ref(db, "/Missed");
-  
+  let editRef;
 
   let tempSongList = []; //songs before cover is added
   let songList = [];
   let songListCopy = [];
+
+  let songNames = [];
 
   let queueList = [];
   
@@ -112,22 +114,71 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
           
         }
     rtdb.onValue(queueRef, ss=>{
+      $('#mySongList').empty();
       //alert(JSON.stringify(ss.val()));
       let keys = Object.keys(ss.val());
+      let counter = 0;
       keys.map(test=>{
+        let firebase_id = keys[counter];
+        counter++;
         if(ss.val()[test].user_id == u_id){
-          $('#mySongs').append(`<li> ${ss.val()[test].song} </li>`)
+          //console.log(ss.val()[test]);
+          
+          $('#mySongList').append(`<li> ${ss.val()[test].song} </li>
+          <button id=${firebase_id} class="editEntry">EDIT</button>
+          <div class="editBox" hidden=true>
+          <form id="submitSongChange">
+          Change Singer  
+          
+          <input id="singerChange" value= ${ss.val()[test].singer} ></input>
+          
+          Change Song
+          
+          <input list="songChanges" name="songChange" id="songChange">
+          <datalist id="songChanges">
+          </datalist>
+          <button i>Submit</button>
+          </form>
+          </div>
+          `)
         }
       })
-      
+      $(document).on('submit', '#submitSongChange', function() {
+        let newSong = songChange.value;
+        let newSinger = singerChange.value;
+        //console.log(newSinger);
+        //console.log(test);
+        //rtdb.update(editRef, {test: "working"});
+        //console.log(songInfo_Name[newSong]);
+        rtdb.update(editRef, {singer: newSinger, song: newSong, artist: songInfo_Name[newSong].artist, duration: songInfo_Name[newSong].length});
+        return false;
+       });
+
+      $('.editEntry').on('click', function(){
+        $('.editBox').show();
+        var list = document.getElementById('songChanges');
+
+        songNames.forEach(function(item){
+        var option = document.createElement('option');
+        option.value = item;
+        list.appendChild(option);
+        });
+        console.log(this.id)
+        //this.id to track
+        //make input boxes show where you can change things
+        //make confirm and cancel button
+        editRef = rtdb.ref(db, `/Queue/${this.id}`);
+        //rtdb.udate(editRef, {singer: changedSinger, song: changedSong});
+        
+      });
     //alert(JSON.stringify(ss.val()));
     });
 });
 
-
   $('#closePopup').on("click", ()=>{
     document.getElementById('test').style.display = 'none';
     document.getElementById('ready').style.display = 'none';
+    document.getElementById('confirm').style.display = 'none';
   });
 
 
@@ -218,7 +269,7 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
     let keys = Object.keys(ss.val()); 
     keys.map(test=>{
       if(ss.val()[test].user_id == u_id){
-        //alert("you missed your song");
+        alert("you missed your song");
       }
     });
   });
@@ -237,12 +288,9 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
       counter++;
       let user = auth.currentUser;
       let u_id = user.uid;
-      console.log(u_id);
-      console.log(ss.val()[test].user_id);
-      console.log(ss.val()[test].linePlace);
+      
       if(ss.val()[test].user_id == u_id){
         if(ss.val()[test].linePlace == 1){
-          console.log("works");
           document.getElementById('ready').style.display = 'block';
         }
       }
@@ -255,7 +303,6 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
         let removeRef = rtdb.ref(db, `/Queue/${test}`);
         rtdb.onValue(removeRef, ss=>{
           obj = ss.val();
-          console.log(ss.val().user_id);  
           rtdb.push(missedRef, obj);
         //alert(JSON.stringify(ss.val()));
         });
@@ -348,6 +395,7 @@ $('#allSongs').on('click','li', function() {
           let user = auth.currentUser;
           user_id = user.uid;
           rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+          //document.getElementById('confirm').style.display = 'block';
           $("#inputSinger").empty();
         }else{
           signInAnonymously(auth)
@@ -356,6 +404,7 @@ $('#allSongs').on('click','li', function() {
           let user = auth.currentUser;
           user_id = user.uid;
           rtdb.push(queueRef, {linePlace: currLine,user_id: user_id, singer: singer, song: theSong, artist: songInfo_Name[theSong].artist, duration: songInfo_Name[theSong].length});
+          //document.getElementById('confirm').style.display = 'block';
           $("#inputSinger").empty();
           })
           .catch((error) => {
@@ -410,7 +459,7 @@ $('#allSongs').on('click','li', function() {
     //alert(JSON.stringify(ss.val()));
     let keys = Object.keys(ss.val());
     $("#allSongs").html("");
-    keys.map(test=>{
+    for(let test = 0; test< 10000; test++){
       let songTitle = ss.val()[test].title;
       
       let artist = ss.val()[test].artist;
@@ -426,10 +475,11 @@ $('#allSongs').on('click','li', function() {
         $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
       }});*/   
       tempSongList.push({songTitle, artist});
+      songNames.push(songTitle);
 
 
 
-    })
+    }
     //processSongs();
     addCovers();
     
@@ -551,14 +601,23 @@ function millisToMinutesAndSeconds(millis) {
 
 function grabCover(index, song, artist, callback){
   let song_cover;
+  
   lastfm.track.getInfo({track: song, artist: artist}, {success: function(data){
     let songTime = data.track.duration;
-    song_cover = data.track.album.image[2]["#text"];
+    
+    if(data.track.album != null){
+      song_cover = data.track.album.image[2]["#text"];
+    }else{
+      song_cover = "https://www.fillmurray.com/200/300";
+    }
+    
+    
     return callback(index, song_cover, songTime);
   }, error: function(code, message){
     song_cover = "https://www.fillmurray.com/200/300";
     return callback(index, song_cover, 0);
   }});
+  
 }
 
 function returnCover(song_cover){

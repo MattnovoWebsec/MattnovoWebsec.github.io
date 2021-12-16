@@ -52,11 +52,15 @@
 									<div class="content">
 										<header class="major">
 											<h2>TESTING</h2>
+
 										</header>
 										<div id="mySongs">
 											<button id="seeSongs">
 												click to see your songs
 											</button>
+											<div id="mySongList">
+
+											</div>
 										</div>
 										<!----
 										<ul class="actions">
@@ -101,10 +105,14 @@
 									<input type="text" id="inputSinger">
 									<button id="submitAddSong">CLICK HERE TO ADD YOUR SONG TO THE QUEUE!</button>
 								</div>
+								<div id="confirm" class="popup">
+									<div id="closePopup" class="cancel"></div>
+									Your song has been added to the queue!
+								</div>
 
 
                 <input type="text" placeholder="Type to search.." id="search">
-								<div id="songNav">Songs per Page <input value=2 type="number" id="songsPerPage"></input><button id="refresh">refresh</button>
+								<div id="songNav">Songs per Page <input value=20 type="number" id="songsPerPage"></input><button id="refresh">refresh</button>
 									<div id="songButtons"></div>
 								</div>
 								
