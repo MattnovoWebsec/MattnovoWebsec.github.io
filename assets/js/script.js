@@ -39,23 +39,28 @@ import * as fbauth from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.
   let song_map = new Object();
   let cover_map = new Object();
   let queueOrder_map = new Object();
+
+  let test_map = new Object();
+
   let currLine = 1;
 
 
   let songInfo_Name = new Object();
 
+  let chunkCompleted;
 
   let lastFiltered ='';
 
   let admin = false;
   
   let auth = fbauth.getAuth(app);
+
+  let songCount;
   
+  let activeTab = 1;
 
-  
-
-
-
+  let currLoop;
+  let processed = false;
 
   let renderUser = function(userObj){
     $("#logout").show();
@@ -455,36 +460,84 @@ $('#allSongs').on('click','li', function() {
   //rtdb.push(titleRef, testObj);
   rtdb.onValue(songRef, ss=>{
     $("#login").hide();//change these two late
-    
-    //alert(JSON.stringify(ss.val()));
-    let keys = Object.keys(ss.val());
     $("#allSongs").html("");
-    for(let test = 0; test< 10000; test++){
-      let songTitle = ss.val()[test].title;
-      
-      let artist = ss.val()[test].artist;
-      
-      /*lastfm.track.getInfo({track: ss.val()[test].title, artist: ss.val()[test].artist}, {success: function(data){
-        cover = data.track.album.image[2]["#text"];
-        
-        $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
-      }, error: function(code, message){
-        //console.log("test");
-        cover = "https://www.fillmurray.com/200/300";
-        
-        $("#allSongs").append(`<li id="song"><img src=${cover}>${ss.val()[test].title + " by " + ss.val()[test].artist}</a> </li>`);
-      }});*/   
-      tempSongList.push({songTitle, artist});
-      songNames.push(songTitle);
+    /*
+    this function is purely to add covers
+    to every song in the db. 
+
+    THIS CODE ONLY NEEDS TO BE RAN ONCE EVERYTIME
+    THE SONGBOOK IS UPDATED
 
 
+    THE FOLLOWING CODES ALSO NEED TO BE 
+    UNCOMMENTED FOR THIS TO WORK:
 
+    PROCESSEDFUNCTION()
+    COVERINDEX()
+    COVERTODB90
+    */
+   /* uncomment when needing to process stuff to db
+    if(!processed){
+      processedFunction(ss);
+      processed = true;
     }
-    //processSongs();
-    addCovers();
+    */
+
+    //normal loading function
+    processSongs(ss);
+    
+    //addCovers();
     
   });
+
+
+  // FUNCTION 2-4 OF ADDING COVERS TO SONGS IN THE DB
+  /*
+  function processedFunction(ss){
+    let keys = Object.keys(ss.val());
+
+        console.log(ss.val());
+        //found better performance when seperating for loop into chunks of 2000
+        for(let test = 12000; test < keys.length; test++){
+          /* testing trimming strings
+          let t = "     dsa      fda   asdfa  "
+          console.log(t);
+          let ts = t.replace(/\s+/g, ' ').trim();
+          console.log(ts);
+          
+          let songTitleBefore = ss.val()[test].title;
+          let artistBefore = ss.val()[test].artist;
+
+          let songTitle = songTitleBefore.replace(/\s+/g, ' ').trim();
+          let artist = artistBefore.replace(/\s+/g, ' ').trim();
+          if(ss.val()[test].length != null){
+            console.log("didnt need one")
+            //grabCover(keys[test], songTitle, artist, coverToDB);
+          }else{
+            //console.log("grabbing cover");
+            grabCover(keys[test], songTitle, artist, coverToDB);
+          }
+          
+        }
+  }
+
+  //function is outdated keeping in case I change my mind
+  function coverIndex(index, songTitle, artist, callback){
+    return callback(index, songTitle, artist, coverToDB);
+  }
     
+  function coverToDB(index, song_cover, song_length){
+    
+    console.log(index);
+    //console.log(song_length)
+    let coverRef = rtdb.ref(db, `/testing/${index}`);
+    rtdb.update(coverRef, {cover: song_cover, length: song_length});
+    chunkCompleted = index;
+  }
+
+  */
+
+  //Function is outdated keeping in case I change my mind
   function addCovers(){
     for(let i = 0; i< tempSongList.length; i++){
       //console.log(tempSongList[i].songTitle, tempSongList[i].artist);
@@ -493,6 +546,7 @@ $('#allSongs').on('click','li', function() {
   }
 
 
+  //outdated function
   function makeSongList(index, song_cover, song_length){
     //console.log("working?" + index + " " + song_cover);
     let songTitle = tempSongList[index].songTitle;
@@ -505,8 +559,10 @@ $('#allSongs').on('click','li', function() {
 
   }
 
-  function processSongs(){ 
-    if(songList.length != 0){   
+  function processSongs(ss){ 
+    let keys = Object.keys(ss.val());
+    songCount = keys.length;
+    if(songCount != 0){   
     //number of songs per page
     /*console.log("FINAL TEST");
     console.log(songList.length);
@@ -516,11 +572,11 @@ $('#allSongs').on('click','li', function() {
     }*/
 
     let num_page = $("#songsPerPage").val();
-    num_page = Math.min(num_page, songList.length);
+    num_page = Math.min(num_page, songCount);
     //console.log(num_page);
     //console.log($("#songsPerPage").val());
     //songlist length / num page
-    let total_pages = Math.max(1, Math.ceil(songList.length / num_page));
+    let total_pages = Math.max(1, Math.ceil(songCount / num_page));
     //console.log(total_pages);
     let cover;
     let counter = 0;
@@ -533,8 +589,8 @@ $('#allSongs').on('click','li', function() {
       //turn this li into buttons... and edit cs so that they are all side by
       //$("#allSongs").append(`<li id=${i} class="tabs">Testing tab ${i}</li>`);
       $("#songButtons").append(`<button id=${i} class="tabs">${i}</button>`);
-
-      let tempList = [];
+      $(`#${i}`).hide();
+      /*let tempList = [];
 
       for(let j = counter; j < counter + num_page; j++){
         if(!(j >= songList.length)){
@@ -550,27 +606,43 @@ $('#allSongs').on('click','li', function() {
         tempList.push({title, artist, cover, length});
         }
       }
+
       counter = counter + num_page;
       song_map[i] = tempList;
-      
+      */
       //console.log(song_map);
       //console.log(tempList);
     }
   
     $("#allSongs").empty();
-    for(let i = 0; i < song_map[1].length; i++){
+    for(let i = 1; i < 6; i++){
+      $(`#${i}`).show();
+    }
+    for(let i = 0; i < num_page; i++){
       //console.log(song_map[this.id][i]);
        //let cover = "https://www.fillmurray.com/200/300";
-        $(`#allSongs`).append(`<li id="song"><img src=${song_map[1][i].cover}>${song_map[1][i].title}</li>`);
+        $(`#allSongs`).append(`<li id="song"><img src=${ss.val()[i].cover}>${ss.val()[i].title}</li>`);
     }    
     $(".tabs").click(function() {
+      $(`.tabs`).hide();
+      //console.log(parseInt(this.id) + 2);
+      let buffStart;
+      if((parseInt(this.id) - 2) > 0){
+        buffStart = parseInt(this.id) - 2;
+      }else if((parseInt(this.id) - 2) > 1) {
+        buffStart = parseInt(this.id) -1;
+      }
+      for(let i = buffStart; i <= (parseInt(this.id) + 2); i++){
+        $(`#${i}`).show();
+      }
       $("#allSongs").empty();
       //console.log(this.id);
       //let cover = "https://www.fillmurray.com/200/300";
-      for(let i = 0; i < song_map[this.id].length; i++){
+      let start = ((this.id - 1) * num_page);
+      for(let i = start; i < (start + num_page); i++){
         
         //console.log(song_map[this.id][i]);
-          $(`#allSongs`).append(`<li id="song"><img src=${song_map[this.id][i].cover}>${song_map[this.id][i].title}</li>`);
+          $(`#allSongs`).append(`<li id="song"><img src=${ss.val()[i].cover}>${ss.val()[i].title}</li>`);
       }
       //showByID(this.id);
     });
@@ -614,8 +686,9 @@ function grabCover(index, song, artist, callback){
     
     return callback(index, song_cover, songTime);
   }, error: function(code, message){
+    
     song_cover = "https://www.fillmurray.com/200/300";
-    return callback(index, song_cover, 0);
+    return callback(index, song_cover, "200000");
   }});
   
 }
